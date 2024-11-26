@@ -87,3 +87,55 @@ plot(tukey_result)
 # Optionally perform ANOVA for another categorical variable (e.g., IND_1)
 anova_result_2 <- aov(WIND ~ IND_1, data = WeatherData)
 summary(anova_result_2)
+
+# Load necessary libraries
+library(ggplot2)
+
+# Univariate Plots
+
+# Histogram for a numeric variable (e.g., WIND)
+ggplot(WeatherData, aes(x = WIND)) +
+  geom_histogram(binwidth = 1, fill = "blue", color = "black") +
+  labs(title = "Distribution of Wind Speed", x = "Wind Speed", y = "Frequency") +
+  theme_minimal()
+
+# Boxplot for a numeric variable (e.g., WIND)
+ggplot(WeatherData, aes(y = WIND)) +
+  geom_boxplot(fill = "cyan", color = "black") +
+  labs(title = "Boxplot of Wind Speed", y = "Wind Speed") +
+  theme_minimal()
+
+# Bar chart for a categorical variable (e.g., IND)
+ggplot(WeatherData, aes(x = IND)) +
+  geom_bar(fill = "orange", color = "black") +
+  labs(title = "Frequency of IND Categories", x = "IND", y = "Count") +
+  theme_minimal()
+
+# Multivariate Plots
+
+# Scatter plot of WIND vs. T_MAX, colored by IND
+ggplot(WeatherData, aes(x = T_MAX, y = WIND, color = IND)) +
+  geom_point() +
+  labs(title = "Scatter Plot of Wind Speed vs. Max Temperature", 
+       x = "Max Temperature", y = "Wind Speed") +
+  theme_minimal()
+
+# Boxplot of WIND grouped by IND
+ggplot(WeatherData, aes(x = IND, y = WIND)) +
+  geom_boxplot(fill = "lightblue", color = "black") +
+  labs(title = "Wind Speed by IND Categories", x = "IND", y = "Wind Speed") +
+  theme_minimal()
+
+# Correlation heatmap for numeric variables
+library(reshape2)
+numeric_vars <- WeatherData[, sapply(WeatherData, is.numeric)]
+cor_matrix <- cor(numeric_vars, use = "complete.obs")
+cor_melted <- melt(cor_matrix)
+
+ggplot(cor_melted, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0) +
+  labs(title = "Correlation Heatmap", x = "Variables", y = "Variables") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
