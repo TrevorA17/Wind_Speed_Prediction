@@ -67,3 +67,23 @@ print(cor_matrix)
 
 # Visualize the correlation matrix
 corrplot(cor_matrix, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
+
+# Perform ANOVA on WIND by IND
+anova_result <- aov(WIND ~ IND, data = WeatherData)
+
+# Display ANOVA summary
+summary(anova_result)
+
+# Post-hoc test to identify pairwise differences (if applicable)
+# Using Tukey's HSD test for multiple comparisons
+tukey_result <- TukeyHSD(anova_result)
+
+# Display Tukey's HSD results
+print(tukey_result)
+
+# Visualize the differences
+plot(tukey_result)
+
+# Optionally perform ANOVA for another categorical variable (e.g., IND_1)
+anova_result_2 <- aov(WIND ~ IND_1, data = WeatherData)
+summary(anova_result_2)
