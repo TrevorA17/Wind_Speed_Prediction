@@ -28,3 +28,15 @@ testData <- WeatherData[-trainIndex, ]
 
 cat("Training Set Size:", nrow(trainData), "\n")
 cat("Testing Set Size:", nrow(testData), "\n")
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Perform bootstrapping: 100 bootstrap samples
+bootstrap_samples <- lapply(1:100, function(i) {
+  WeatherData[sample(1:nrow(WeatherData), replace = TRUE), ]
+})
+
+cat("Bootstrap Samples Generated:", length(bootstrap_samples), "\n")
+# Example: Display the first bootstrap sample
+head(bootstrap_samples[[1]])
