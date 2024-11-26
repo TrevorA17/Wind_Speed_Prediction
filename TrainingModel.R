@@ -125,3 +125,15 @@ cat("Linear Regression RMSE:", lm_rmse, "R²:", lm_r2, "\n")
 cat("Random Forest RMSE:", rf_rmse, "R²:", rf_r2, "\n")
 cat("GBM RMSE:", gbm_rmse, "R²:", gbm_r2, "\n")
 
+# 4. Perform resampling to compare model performance
+model_list <- list(lm = lm_model, rf = rf_model, gbm = gbm_model)
+
+# Resample the models to compare performance across different iterations
+resamples_result <- resamples(model_list)
+
+# Summary of resampling results
+summary(resamples_result)
+
+# Boxplots for performance comparison (e.g., RMSE)
+bwplot(resamples_result)
+
