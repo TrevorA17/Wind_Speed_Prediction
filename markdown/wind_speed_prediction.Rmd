@@ -1,0 +1,432 @@
+---
+title: "Wind Speed Prediction"
+author: "Trevor Okinda"
+date: "2024"
+output:
+  github_document: 
+    toc: yes
+    toc_depth: 4
+    fig_width: 6
+    fig_height: 4
+    df_print: default
+editor_options:
+  chunk_output_type: console
+---
+
+# Student Details
+
+|                                              |     |
+|----------------------------------------------|-----|
+| **Student ID Number**                        | 134780 |
+| **Student Name**                             | Trevor Okinda |
+| **BBIT 4.2 Group**                           | C |
+| **Project Name**                             | Windspeed Prediction |
+
+# Setup Chunk
+
+**Note:** the following KnitR options have been set as the global defaults: <BR> `knitr::opts_chunk$set(echo = TRUE, warning = FALSE, eval = TRUE, collapse = FALSE, tidy = TRUE)`.
+
+More KnitR options are documented here <https://bookdown.org/yihui/rmarkdown-cookbook/chunk-options.html> and here <https://yihui.org/knitr/options/>.
+
+```{r setup, include=FALSE}
+library(formatR)
+knitr::opts_chunk$set(
+  warning = FALSE,
+  collapse = FALSE
+)
+```
+
+### Source: 
+
+The dataset that was used can be downloaded here: *\<https://www.kaggle.com/datasets/fedesoriano/wind-speed-prediction-dataset\>*
+
+### Reference:
+
+*\<fedesoriano. (n.d.). Wind Speed Prediction Dataset [Data set]. Kaggle. https://www.kaggle.com/datasets/fedesoriano/wind-speed-prediction-dataset\>\
+Refer to the APA 7th edition manual for rules on how to cite datasets: <https://apastyle.apa.org/style-grammar-guidelines/references/examples/data-set-references>*
+
+
+# Understanding the Dataset (Exploratory Data Analysis (EDA))
+
+## Loading the Dataset
+```{r load dataset}
+# Load the dataset
+WeatherData <- read.csv("wind_dataset.csv", colClasses = c(
+  IND = "factor",
+  RAIN = "numeric",
+  IND_1 = "factor",
+  T_MAX = "numeric",
+  IND_2 = "factor",
+  T_MIN = "numeric",
+  WIND = "numeric"
+))
+
+# Display structure to verify data types
+str(WeatherData)
+
+# Display first few rows to ensure data is loaded correctly
+head(WeatherData)
+
+# View the dataset in a spreadsheet-like interface (optional)
+View(WeatherData)
+```
+
+## Measures of Frequency
+```{r MOF}
+# Load necessary libraries
+library(psych)   # For descriptive statistics
+library(corrplot) # For visualizing relationships
+
+# Measures of Frequency
+# Frequency distribution of categorical variables
+freq_IND <- table(WeatherData$IND)
+freq_IND_1 <- table(WeatherData$IND_1)
+freq_IND_2 <- table(WeatherData$IND_2)
+
+cat("Frequency distribution for IND:\n")
+print(freq_IND)
+
+cat("Frequency distribution for IND_1:\n")
+print(freq_IND_1)
+
+cat("Frequency distribution for IND_2:\n")
+print(freq_IND_2)
+```
+
+## Measures of Central Tendency
+```{r MOCT}
+# Measures of Central Tendency
+# Mean, Median, and Mode (mode is approximated as the most frequent value for simplicity)
+mean_RAIN <- mean(WeatherData$RAIN, na.rm = TRUE)
+median_RAIN <- median(WeatherData$RAIN, na.rm = TRUE)
+mode_RAIN <- as.numeric(names(sort(table(WeatherData$RAIN), decreasing = TRUE))[1])
+
+cat("Mean of RAIN:", mean_RAIN, "\n")
+cat("Median of RAIN:", median_RAIN, "\n")
+cat("Mode of RAIN:", mode_RAIN, "\n")
+```
+
+## Measures of Distribution
+```{r MOD}
+# Measures of Distribution
+# Standard deviation, variance, range
+sd_RAIN <- sd(WeatherData$RAIN, na.rm = TRUE)
+var_RAIN <- var(WeatherData$RAIN, na.rm = TRUE)
+range_RAIN <- range(WeatherData$RAIN, na.rm = TRUE)
+
+cat("Standard deviation of RAIN:", sd_RAIN, "\n")
+cat("Variance of RAIN:", var_RAIN, "\n")
+cat("Range of RAIN:", paste(range_RAIN, collapse = " - "), "\n")
+```
+
+## Measures of Relationship
+```{r MOR}
+# Measures of Relationship
+# Correlation matrix for numeric variables
+numeric_vars <- WeatherData[, sapply(WeatherData, is.numeric)]
+cor_matrix <- cor(numeric_vars, use = "complete.obs")
+
+cat("Correlation matrix:\n")
+print(cor_matrix)
+
+# Visualize the correlation matrix
+corrplot(cor_matrix, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
+```
+
+## ANOVA
+```{r ANOVA}
+# Perform ANOVA on WIND by IND
+anova_result <- aov(WIND ~ IND, data = WeatherData)
+
+# Display ANOVA summary
+summary(anova_result)
+
+# Post-hoc test to identify pairwise differences (if applicable)
+# Using Tukey's HSD test for multiple comparisons
+tukey_result <- TukeyHSD(anova_result)
+
+# Display Tukey's HSD results
+print(tukey_result)
+
+# Visualize the differences
+plot(tukey_result)
+
+# Optionally perform ANOVA for another categorical variable (e.g., IND_1)
+anova_result_2 <- aov(WIND ~ IND_1, data = WeatherData)
+summary(anova_result_2)
+
+```
+
+## Plots
+```{r Plots}
+# Load necessary libraries
+library(ggplot2)
+
+# Univariate Plots
+
+# Histogram for a numeric variable (e.g., WIND)
+ggplot(WeatherData, aes(x = WIND)) +
+  geom_histogram(binwidth = 1, fill = "blue", color = "black") +
+  labs(title = "Distribution of Wind Speed", x = "Wind Speed", y = "Frequency") +
+  theme_minimal()
+
+# Boxplot for a numeric variable (e.g., WIND)
+ggplot(WeatherData, aes(y = WIND)) +
+  geom_boxplot(fill = "cyan", color = "black") +
+  labs(title = "Boxplot of Wind Speed", y = "Wind Speed") +
+  theme_minimal()
+
+# Bar chart for a categorical variable (e.g., IND)
+ggplot(WeatherData, aes(x = IND)) +
+  geom_bar(fill = "orange", color = "black") +
+  labs(title = "Frequency of IND Categories", x = "IND", y = "Count") +
+  theme_minimal()
+
+# Multivariate Plots
+
+# Scatter plot of WIND vs. T_MAX, colored by IND
+ggplot(WeatherData, aes(x = T_MAX, y = WIND, color = IND)) +
+  geom_point() +
+  labs(title = "Scatter Plot of Wind Speed vs. Max Temperature", 
+       x = "Max Temperature", y = "Wind Speed") +
+  theme_minimal()
+
+# Boxplot of WIND grouped by IND
+ggplot(WeatherData, aes(x = IND, y = WIND)) +
+  geom_boxplot(fill = "lightblue", color = "black") +
+  labs(title = "Wind Speed by IND Categories", x = "IND", y = "Wind Speed") +
+  theme_minimal()
+
+# Correlation heatmap for numeric variables
+library(reshape2)
+numeric_vars <- WeatherData[, sapply(WeatherData, is.numeric)]
+cor_matrix <- cor(numeric_vars, use = "complete.obs")
+cor_melted <- melt(cor_matrix)
+
+ggplot(cor_melted, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0) +
+  labs(title = "Correlation Heatmap", x = "Variables", y = "Variables") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+# Preprocessing and Data Transformation
+## Missing Values
+```{r Missing Values}
+# Check for missing values in the entire dataset
+missing_values <- colSums(is.na(WeatherData))
+
+# Display the count of missing values for each column
+cat("Missing values in each column:\n")
+print(missing_values)
+
+# Check if the dataset has any missing values at all
+if (sum(missing_values) > 0) {
+  cat("Total missing values in the dataset:", sum(missing_values), "\n")
+} else {
+  cat("No missing values in the dataset.\n")
+}
+
+# Optionally, display rows with missing values
+rows_with_na <- WeatherData[!complete.cases(WeatherData), ]
+cat("Rows with missing values:\n")
+print(rows_with_na)
+
+
+# View the dataset in a spreadsheet-like interface (optional)
+View(WeatherData)
+
+```
+
+## Clean Dataset
+```{r Clean dataset}
+# Remove rows with missing values
+CleanedWeatherData <- na.omit(WeatherData)
+
+# Save the cleaned dataset to a CSV file
+write.csv(CleanedWeatherData, "cleaned_weather_data.csv", row.names = FALSE)
+
+# Verify that there are no missing values in the cleaned dataset
+missing_values_cleaned <- colSums(is.na(CleanedWeatherData))
+
+cat("Missing values in the cleaned dataset:\n")
+print(missing_values_cleaned)
+
+if (sum(missing_values_cleaned) == 0) {
+  cat("All missing values have been successfully removed.\n")
+} else {
+  cat("There are still missing values in the cleaned dataset.\n")
+}
+
+```
+
+# Training Model
+## Data Splitting
+```{r Data Splitting}
+# Load necessary library
+library(caret)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Split the data: 70% training and 30% testing
+trainIndex <- createDataPartition(WeatherData$WIND, p = 0.7, list = FALSE)
+trainData <- WeatherData[trainIndex, ]
+testData <- WeatherData[-trainIndex, ]
+
+cat("Training Set Size:", nrow(trainData), "\n")
+cat("Testing Set Size:", nrow(testData), "\n")
+```
+
+## Bootstrapping
+```{r Bootstrapping}
+# Set seed for reproducibility
+set.seed(123)
+
+# Perform bootstrapping: 100 bootstrap samples
+bootstrap_samples <- lapply(1:100, function(i) {
+  WeatherData[sample(1:nrow(WeatherData), replace = TRUE), ]
+})
+
+cat("Bootstrap Samples Generated:", length(bootstrap_samples), "\n")
+# Example: Display the first bootstrap sample
+head(bootstrap_samples[[1]])
+```
+
+## Cross-validation
+```{r Cross-validation}
+# Set seed for reproducibility
+set.seed(123)
+
+# Perform 10-fold cross-validation
+cvIndex <- createFolds(WeatherData$WIND, k = 10, list = TRUE)
+
+cat("Number of Folds:", length(cvIndex), "\n")
+# Example: Display indices of the first fold
+print(cvIndex[[1]])
+```
+
+## Training Different Models
+```{r Training Different Models}
+# Load necessary libraries
+library(caret)
+library(randomForest)
+library(gbm)
+
+# Load the cleaned dataset
+CleanedWeatherData <- read.csv("cleaned_weather_data.csv")
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Split the cleaned dataset into training and testing sets
+trainIndex <- createDataPartition(CleanedWeatherData$WIND, p = 0.7, list = FALSE)
+trainData <- CleanedWeatherData[trainIndex, ]
+testData <- CleanedWeatherData[-trainIndex, ]
+
+# 1. Linear Regression Model
+lm_model <- train(
+  WIND ~ .,                   # Predict WIND using all other variables
+  data = trainData,
+  method = "lm",              # Linear Regression
+  trControl = trainControl(method = "cv", number = 10) # 10-fold cross-validation
+)
+
+# 2. Random Forest Regression Model
+rf_model <- train(
+  WIND ~ .,                   # Predict WIND using all other variables
+  data = trainData,
+  method = "rf",              # Random Forest Regression
+  trControl = trainControl(method = "cv", number = 10) # 10-fold cross-validation
+)
+
+# 3. Gradient Boosting Machine (GBM) Model
+gbm_model <- train(
+  WIND ~ .,                   # Predict WIND using all other variables
+  data = trainData,
+  method = "gbm",             # Gradient Boosting Machine
+  trControl = trainControl(method = "cv", number = 10), # 10-fold cross-validation
+  verbose = FALSE             # Suppress verbose output from the GBM model
+)
+
+# Display model summaries
+cat("Linear Regression Model:\n")
+print(lm_model)
+
+cat("\nRandom Forest Model:\n")
+print(rf_model)
+
+cat("\nGradient Boosting Machine Model:\n")
+print(gbm_model)
+```
+
+## Evaluate Models Performance
+```{r evaluate models}
+# 4. Make predictions on the test set for all models
+lm_predictions <- predict(lm_model, newdata = testData)
+rf_predictions <- predict(rf_model, newdata = testData)
+gbm_predictions <- predict(gbm_model, newdata = testData)
+
+# 5. Evaluate model performance
+actuals <- testData$WIND
+
+# RMSE (Root Mean Squared Error)
+lm_rmse <- sqrt(mean((lm_predictions - actuals)^2))
+rf_rmse <- sqrt(mean((rf_predictions - actuals)^2))
+gbm_rmse <- sqrt(mean((gbm_predictions - actuals)^2))
+
+# R-squared (R²)
+lm_r2 <- cor(lm_predictions, actuals)^2
+rf_r2 <- cor(rf_predictions, actuals)^2
+gbm_r2 <- cor(gbm_predictions, actuals)^2
+
+cat("\nModel Performance on Test Set:\n")
+cat("Linear Regression RMSE:", lm_rmse, "R²:", lm_r2, "\n")
+cat("Random Forest RMSE:", rf_rmse, "R²:", rf_r2, "\n")
+cat("GBM RMSE:", gbm_rmse, "R²:", gbm_r2, "\n")
+```
+
+## Resamples 
+```{r resamples}
+# 4. Perform resampling to compare model performance
+model_list <- list(lm = lm_model, rf = rf_model, gbm = gbm_model)
+
+# Resample the models to compare performance across different iterations
+resamples_result <- resamples(model_list)
+
+# Summary of resampling results
+summary(resamples_result)
+
+# Boxplots for performance comparison (e.g., RMSE)
+bwplot(resamples_result)
+```
+
+## Saving Model
+```{r Saving Model}
+# Saving the model
+saveRDS(gbm_model, "./models/saved_gbm_model.rds")
+
+# Load the saved model
+loaded_gbm_model <- readRDS("./models/saved_gbm_model.rds")
+
+# Model predicts Wind Speed
+new_data <- data.frame(
+  # Make sure the factors are correctly assigned with the same levels as in training
+  IND = 0,
+  RAIN = 0.2,
+  IND_1 = 4,
+  T_MAX = 9.5,
+  IND_2 = 4,
+  T_MIN = 3.7
+)
+
+# Use the loaded model to make predictions
+predictions_loaded_gbm_model <- predict(loaded_gbm_model, newdata = new_data)
+
+# Print predictions
+print(predictions_loaded_gbm_model)
+
+```
+
